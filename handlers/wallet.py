@@ -79,10 +79,10 @@ def register_wallet_handlers(dp):
     async def import_evm_handler(message: types.Message, state: FSMContext):
         await import_evm_key(message, state)
 
-    @dp.message(state=WalletStates.waiting_for_solana_key)
-    async def process_solana_key_handler(message: types.Message, state: FSMContext):
-        await process_solana_key(message, state)
-
-    @dp.message(state=WalletStates.waiting_for_evm_key)
-    async def process_evm_key_handler(message: types.Message, state: FSMContext):
-        await process_evm_key(message, state)
+    @dp.message()
+    async def process_key_handler(message: types.Message, state: FSMContext):
+        current_state = await state.get_state()
+        if current_state == WalletStates.waiting_for_solana_key:
+            await process_solana_key(message, state)
+        elif current_state == WalletStates.waiting_for_evm_key:
+            await process_evm_key(message, state)
