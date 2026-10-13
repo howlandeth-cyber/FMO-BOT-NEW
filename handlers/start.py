@@ -3,6 +3,8 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
+from keyboards import get_main_keyboard, get_chain_selection_keyboard, get_wallet_keyboard, get_back_to_menu_keyboard
+
 from config import ADMIN_USER_ID
 
 class BotStates(StatesGroup):
