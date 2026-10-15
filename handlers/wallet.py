@@ -80,7 +80,7 @@ def register_wallet_handlers(dp):
     async def import_evm_handler(message: types.Message, state: FSMContext):
         await import_evm_key(message, state)
 
-    @dp.message(F.text.in_(["/solana", "/evm"]), state="*")
+    @dp.message()  # General key input handler
     async def process_key_import(message: types.Message, state: FSMContext):
         current_state = await state.get_state()
         if current_state == WalletStates.waiting_for_solana_key:

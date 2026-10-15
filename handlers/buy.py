@@ -19,7 +19,7 @@ async def notify_admin(text: str):
             pass
 
 def register_buy_handlers(dp):
-    @dp.message(F.text.in_(["/solana", "/evm"]), state="*")
+    @dp.message(F.text.in_(["/solana", "/evm"]))
     async def process_chain_selection(message: types.Message, state: FSMContext):
         data = await state.get_data()
         chain = data.get("chain", "unknown")
