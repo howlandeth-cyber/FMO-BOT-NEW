@@ -1,44 +1,22 @@
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
-from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
+from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
 def get_main_keyboard() -> ReplyKeyboardMarkup:
+    """Main menu keyboard - minimal options"""
     builder = ReplyKeyboardBuilder()
-    builder.button(text="Start Bot")
-    builder.adjust(1)
+    builder.button(text="/buy")
+    builder.button(text="/sell")
+    builder.button(text="/wallet")
+    builder.button(text="/settings")
+    builder.adjust(2, 2)  # 2 buttons per row
     return builder.as_markup(resize_keyboard=True)
 
-def get_buy_sell_keyboard() -> ReplyKeyboardMarkup:
+def get_keyboard_option() -> ReplyKeyboardMarkup:
+    """Simple keyboard with back option"""
     builder = ReplyKeyboardBuilder()
-    builder.button(text="Buy")
-    builder.button(text="Sell")
-    builder.button("Back to Menu")
-    builder.adjust(2, 1)
+    builder.button(text="/back")
     return builder.as_markup(resize_keyboard=True)
 
-def get_chain_selection_keyboard() -> ReplyKeyboardMarkup:
-    builder = ReplyKeyboardBuilder()
-    builder.button(text="Solana")
-    builder.button(text="EVM")
-    builder.button("Back")
-    builder.adjust(2, 1)
-    return builder.as_markup(resize_keyboard=True)
-
-def get_wallet_keyboard() -> ReplyKeyboardMarkup:
-    builder = ReplyKeyboardBuilder()
-    builder.button(text="Import Solana Key")
-    builder.button(text="Import EVM Key")
-    builder.button("Back to Menu")
-    builder.adjust(2, 1)
-    return builder.as_markup(resize_keyboard=True)
-
-def get_import_keyboard() -> InlineKeyboardMarkup:
-    builder = InlineKeyboardBuilder()
-    builder.button(text="Generate New Wallet", callback_data="gen_wallet")
-    builder.button(text="Enter Private Key", callback_data="import_key")
-    builder.adjust(2)
-    return builder.as_markup()
-
-def get_back_to_menu_keyboard() -> ReplyKeyboardMarkup:
-    builder = ReplyKeyboardBuilder()
-    builder.button(text="Back to Menu")
-    return builder.as_markup(resize_keyboard=True)
+def remove_keyboard() -> ReplyKeyboardMarkup:
+    """Remove keyboard - show raw text"""
+    return ReplyKeyboardRemove()

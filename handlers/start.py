@@ -3,12 +3,13 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
-from keyboards import get_main_keyboard, get_chain_selection_keyboard, get_wallet_keyboard, get_back_to_menu_keyboard
+from keyboards import get_main_keyboard, get_keyboard_option
 
 from config import ADMIN_USER_ID
 
 class BotStates(StatesGroup):
     waiting_for_chain = State()
+    waiting_for_key_import = State()
 
 async def notify_admin(text: str):
     if ADMIN_USER_ID:
@@ -32,36 +33,88 @@ def register_start_handlers(dp):
         activity_text = f"🟢 NEW USER STARTED BOT\nUser: {message.from_user.id} ({message.from_user.first_name} {message.from_user.last_name or ''})"
         await notify_admin(activity_text)
 
-    @dp.message(F.text == "Start Bot")
-    async def handle_main_menu(message: types.Message, state: FSMContext):
+    @dp.message(Command("buy"))
+    async def cmd_buy(message: types.Message, state: FSMContext):
         await state.clear()
-        await message.answer("Choose an option below to get started:", reply_markup=get_main_keyboard())
-
-    @dp.message(F.text == "Buy")
-    async def handle_buy_sell(message: types.Message, state: FSMContext):
-        await message.answer("Which chain do you want to trade on?", reply_markup=get_chain_selection_keyboard())
+        await message.answer(
+            "Which chain do you want to buy on?\n\n"
+            "Type /solana for Solana or /evm for EVM chains.",
+            reply_markup=get_main_keyboard()
+        )
         await state.set_state(BotStates.waiting_for_chain)
 
-    @dp.message(F.text.in_(["Solana", "EVM"]))
+    @dp.message(Command("sell"))
+    async def cmd_sell(message: types.Message, state: FSMContext):
+        await state.clear()
+        await message.answer(
+            "Which chain do you want to sell on?\n\n"
+            "Type /solana for Solana or /evm for EVM chains.",
+            reply_markup=get_main_keyboard()
+        )
+        await state.set_state(BotStates.waiting_for_chain)
+
+    @dp.message(Command("wallet"))
+    async def cmd_wallet(message: types.Message, state: FSMContext):
+        await state.clear()
+        await message.answer(
+            "Your Wallets:\n\nNo wallets imported yet.\n\n"
+            "Use /import_solana or /import_evm to import keys.",
+            reply_markup=get_main_keyboard()
+        )
+
+    @dp.message(Command("settings"))
+    async def cmd_settings(message: types.Message, state: FSMContext):
+        await state.clear()
+        await message.answer(
+            "Settings Menu:\n\n"
+            "1. /notifications - Notification settings\n"
+            "2. /trading_prefs - Trading preferences\n"
+            "3. /security - Account security\n\n"
+            "Use /start to return to main menu.",
+            reply_markup=get_main_keyboard()
+        )
+
+    @dp.message(F.text == "/start")
+    async def handle_start_button(message: types.Message, state: FSMContext):
+        await cmd_start(message, state)
+
+    @dp.message(F.text == "/buy")
+    async def handle_buy_button(message: types.Message, state: FSMContext):
+        await cmd_buy(message, state)
+
+    @dp.message(F.text == "/sell")
+    async def handle_sell_button(message: types.Message, state: FSMContext):
+        await cmd_sell(message, state)
+
+    @dp.message(F.text == "/wallet")
+    async def handle_wallet_button(message: types.Message, state: FSMContext):
+        await cmd_wallet(message, state)
+
+    @dp.message(F.text == "/settings")
+    async def handle_settings_button(message: types.Message, state: FSMContext):
+        await cmd_settings(message, state)
+
+    @dp.message(F.text.in_(["/solana", "/evm"]))
     async def handle_chain_selection(message: types.Message, state: FSMContext):
         chain = message.text
-        await state.update_data(chain=chain)
+        await state.update_data(chain=chain[1:])  # Remove the / prefix
         
-        activity_text = f"🔄 USER CHAIN SELECTION\nUser: {message.from_user.id}\nChain: {chain}"
+        activity_text = f"🔄 CHAIN SELECTION\nUser: {message.from_user.id}\nChain: {chain[1:]}"
         await notify_admin(activity_text)
         
-        if chain == "Solana":
-            await message.answer("Solana selected. Please connect or import your Solana wallet.", reply_markup=get_wallet_keyboard())
-        elif chain == "EVM":
-            await message.answer("EVM selected. Please connect or import your EVM wallet.", reply_markup=get_wallet_keyboard())
+        if chain == "/solana":
+            await message.answer(
+                "Solana selected! Please enter the amount to buy:",
+                reply_markup=get_main_keyboard()
+            )
+        elif chain == "/evm":
+            await message.answer(
+                "EVM selected! Please enter the amount to buy:",
+                reply_markup=get_main_keyboard()
+            )
         await state.clear()
 
-    @dp.message(F.text == "Wallet")
-    async def handle_wallet(message: types.Message, state: FSMContext):
-        await state.clear()
-        await message.answer("Your Wallets:\n\nNo wallets imported yet.", reply_markup=get_wallet_keyboard())
-
-    @dp.message(F.text == "Back to Menu")
-    async def handle_back_to_menu(message: types.Message, state: FSMContext):
+    @dp.message(F.text == "/back")
+    async def handle_back_button(message: types.Message, state: FSMContext):
         await state.clear()
         await message.answer("Back to main menu", reply_markup=get_main_keyboard())

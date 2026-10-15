@@ -3,8 +3,9 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
+from keyboards import get_main_keyboard, get_keyboard_option
+
 from config import ADMIN_USER_ID
-from keyboards import get_wallet_keyboard, get_back_to_menu_keyboard
 
 class WalletStates(StatesGroup):
     waiting_for_solana_key = State()
@@ -18,16 +19,12 @@ async def notify_admin(text: str):
         except:
             pass
 
-async def cmd_wallet(message: types.Message, state: FSMContext):
-    await state.clear()
-    await message.answer("Your Wallets:\n\nNo wallets imported yet.", reply_markup=get_wallet_keyboard())
-
 async def import_solana_key(message: types.Message, state: FSMContext):
     await message.answer(
         "Import Solana Private Key:\n\n"
         "Please enter your Solana private key (base58 encoded).\n"
         "Your key will be encrypted at rest.",
-        reply_markup=get_back_to_menu_keyboard()
+        reply_markup=get_main_keyboard()
     )
     await state.set_state(WalletStates.waiting_for_solana_key)
 
@@ -36,7 +33,7 @@ async def import_evm_key(message: types.Message, state: FSMContext):
         "Import EVM Private Key:\n\n"
         "Please enter your EVM private key.\n"
         "Your key will be encrypted at rest.",
-        reply_markup=get_back_to_menu_keyboard()
+        reply_markup=get_main_keyboard()
     )
     await state.set_state(WalletStates.waiting_for_evm_key)
 
@@ -67,20 +64,24 @@ async def process_evm_key(message: types.Message, state: FSMContext):
     await state.clear()
 
 def register_wallet_handlers(dp):
-    @dp.message(F.text == "Wallet")
-    async def cmd_wallet_handler(message: types.Message, state: FSMContext):
-        await cmd_wallet(message, state)
+    @dp.message(Command("import_solana"))
+    async def import_solana_cmd(message: types.Message, state: FSMContext):
+        await import_solana_key(message, state)
 
-    @dp.message(F.text == "Import Solana Key")
+    @dp.message(Command("import_evm"))
+    async def import_evm_cmd(message: types.Message, state: FSMContext):
+        await import_evm_key(message, state)
+
+    @dp.message(F.text == "/import_solana")
     async def import_solana_handler(message: types.Message, state: FSMContext):
         await import_solana_key(message, state)
 
-    @dp.message(F.text == "Import EVM Key")
+    @dp.message(F.text == "/import_evm")
     async def import_evm_handler(message: types.Message, state: FSMContext):
         await import_evm_key(message, state)
 
-    @dp.message()
-    async def process_key_handler(message: types.Message, state: FSMContext):
+    @dp.message(F.text.in_(["/solana", "/evm"]), state="*")
+    async def process_key_import(message: types.Message, state: FSMContext):
         current_state = await state.get_state()
         if current_state == WalletStates.waiting_for_solana_key:
             await process_solana_key(message, state)
